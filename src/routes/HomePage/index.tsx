@@ -1,4 +1,4 @@
-import { Button } from "@heroui/react";
+import { addToast, Button } from "@heroui/react";
 import signMessage from "../../tools/wallets/walletSign";
 import walletClient from "../../tools/wallets/walletClient";
 import publicClient from "../../tools/wallets/publicClient";
@@ -14,8 +14,9 @@ interface FileVaultStorage {
 }
 
 export default function HomePage() {
-  const [addresses, setAddresses] = useState<string[]>([]);
+  const [addresses, setAddresses] = useState<`0x${string}`[]>([]);
   const [vaultData, setVaultData] = useState<FileVaultStorage>({});
+  const [loading, setLoading] = useState(false);
 
   const currentVault = useMemo(() => {
     if (addresses.length === 0) {
@@ -25,73 +26,128 @@ export default function HomePage() {
     return vaultData[address] || null;
   }, [addresses, vaultData]);
 
+  const getLocalVaultData = async (address: `0x${string}`) => {
+    const vaultData = await localforage.getItem<{
+      [address: string]: FileVault;
+    }>(`vaultdata_${address}`);
+    setVaultData(vaultData || {});
+    console.log("vaultData", vaultData);
+  };
+
   useEffect(() => {
     async function fetchAddresses() {
       const addrs = await walletClient.getAddresses();
       setAddresses(addrs);
-      const vaultData = await localforage.getItem<{
-        [address: string]: FileVault;
-      }>("vaultdata");
-      setVaultData(vaultData || {});
-      console.log("vaultData", vaultData);
+      if (addrs.length === 0) {
+        return;
+      }
+      await getLocalVaultData(addrs[0]);
     }
     fetchAddresses();
   }, []);
 
-  return (
-    <div>
-      <div>HomePage</div>
-      {!currentVault && (
-        <div>
-          <Button
-            onClick={async () => {
+  if (addresses.length === 0) {
+    return (
+      <div>
+        <Button
+          onPress={async () => {
+            try {
               const addresses = await walletClient.requestAddresses();
               console.log("addresses", addresses);
-            }}
-          >
-            Connect Wallet
-          </Button>
-          <Button
-            onClick={async () => {
-              const sign = await signMessage();
-              console.log("sign", sign);
-              if (!sign) {
-                return;
-              }
-              const addresses = await walletClient.getAddresses();
-              const address = addresses[0];
-              const result = await publicClient.verifyMessage({
-                message: "Hello, Devault!",
-                signature: sign,
-                address,
-              });
-              const { derivedKey, salt } = await deriveKeyFromSign(sign);
-              const vaultData = await generateNewVault(
-                derivedKey,
-                salt,
-                walletClient.chain
-              );
-              const vaultFile = JSON.parse(JSON.stringify(vaultData[0]));
-              localforage.setItem<FileVaultStorage>("vaultdata", {
-                [address]: vaultFile,
-              });
-              setVaultData({
-                [address]: vaultFile,
-              });
-              const sto =
-                await localforage.getItem<FileVaultStorage>("vaultdata");
-              console.log("sto", sto);
               setAddresses(addresses);
-              console.log("vaultData", vaultData);
-              // console.log("encryptedDek", uint8ArrayToHextString(encryptedDek));
-              // console.log(uint8ArrayToBase64(encryptedDek));
+              await getLocalVaultData(addresses[0]);
+            } catch (error) {
+              addToast({ title: "Failed to connect wallet", color: "danger" });
+            }
+          }}
+        >
+          Connect Wallet
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {currentVault ? (
+        <ExistedVaults address={addresses[0]} vaultData={vaultData} />
+      ) : (
+        <div>
+          <Button
+            isLoading={loading}
+            onPress={async () => {
+              try {
+                setLoading(true);
+                let sign: `0x${string}` | undefined;
+                try {
+                  sign = await signMessage();
+                } catch (error) {}
+                if (!sign) {
+                  addToast({
+                    title: "Failed to sign message",
+                    color: "danger",
+                  });
+                  return;
+                }
+                const address = addresses[0];
+                const result = await publicClient.verifyTypedData({
+                  domain: {
+                    name: "Devault",
+                    chainId: BigInt(walletClient.chain.id),
+                  },
+                  types: {
+                    EIP712Domain: [
+                      { name: "name", type: "string" },
+                      { name: "chainId", type: "uint256" },
+                    ],
+                    VaultAuth: [
+                      { name: "purpose", type: "string" },
+                      { name: "tips", type: "string" },
+                    ],
+                  },
+                  primaryType: "VaultAuth",
+                  message: {
+                    purpose: "Vault Access",
+                    tips: "Sign this message to access your vault securely.",
+                  },
+                  signature: sign,
+                  address,
+                });
+                if (!result) {
+                  addToast({
+                    title: "Failed to verify signature",
+                    color: "danger",
+                  });
+                  return;
+                }
+                const { derivedKey, salt } = await deriveKeyFromSign(sign);
+                const vaultData = await generateNewVault(
+                  derivedKey,
+                  salt,
+                  walletClient.chain
+                );
+                const vaultFile = JSON.parse(JSON.stringify(vaultData[0]));
+                localforage.setItem<FileVaultStorage>(`vaultdata_${address}`, {
+                  [address]: vaultFile,
+                });
+                setVaultData({
+                  [address]: vaultFile,
+                });
+                addToast({ title: "New vault generated", color: "success" });
+              } catch (error) {
+                addToast({
+                  title: "Failed to generate new vault",
+                  color: "danger",
+                });
+              } finally {
+                setLoading(false);
+              }
             }}
           >
-            Wallet Sign Message
+            Generate New Vault
           </Button>
         </div>
       )}
-      <ExistedVaults addresses={addresses} vaultData={vaultData} />
     </div>
   );
 }

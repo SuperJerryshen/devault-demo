@@ -41,4 +41,10 @@ export default class VaultManager {
       vaults: JSON.parse(decodeURI(decodedVaultBuffer)),
     };
   }
+
+  async lock() {
+    this.dek = undefined;
+    this.masterKey = undefined;
+    this.decodedFileVault = undefined;
+  }
 }

@@ -1,3 +1,4 @@
+import { TreeItem } from "react-complex-tree";
 import type { Chain } from "viem";
 
 export interface CiphersMap {
@@ -33,18 +34,16 @@ export interface DecodedFileVault {
     ciphers: CiphersMap;
     chain: Chain;
   };
-  vaults: Record<string, VaultItemType>;
+  vaults: VaultsDataType;
 }
 
-export interface VaultItemOrigin<T = any> {
-  id: string;
-  name: string;
-  children?: string[];
-  isFolder: boolean;
-  createdAt: number;
-  updatedAt: number;
-  data: T;
-}
+export type VaultsDataType = Record<string, VaultItemOrigin>;
+
+export type VaultItemOrigin<T = any> = TreeItem<string> & {
+  createdAt: string;
+  updatedAt: string;
+  vaultData: T;
+};
 
 export type EncodedVaultItem = VaultItemOrigin<string>;
 

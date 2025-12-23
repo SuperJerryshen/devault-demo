@@ -2,28 +2,56 @@ import VaultManager from "@/tools/vaults/vaultManager";
 import signMessage from "@/tools/wallets/walletSign";
 import { Button } from "@heroui/button";
 import { addToast } from "@heroui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as dek from "@/tools/crypto/dek";
-import { FileVault } from "@/tools/vaults/types";
+import {
+  FileVault,
+  VaultItemOrigin,
+  VaultsDataType,
+} from "@/tools/vaults/types";
 import { base64ToUint8Array } from "@/tools/crypto/utils";
+import VaultLists from "./VaultLists";
 
 (window as any).dek = dek;
 
 export default function ExistedVaults(props: {
-  addresses: string[];
+  address?: `0x${string}`;
   vaultData: { [address: string]: FileVault };
 }) {
-  const { addresses, vaultData } = props;
-  const [currentVault, setCurrentVault] = useState<VaultManager>();
+  const { address, vaultData } = props;
+  const vaultManagerRef = useRef<VaultManager>();
+  const [vaultLists, setVaultLists] = useState<VaultsDataType>();
+
+  if (!address) {
+    return <div>No address found</div>;
+  }
+
   return (
     <div>
-      <div>ExistedVaults</div>
-      {addresses.map((address) => (
-        <div key={address}>
-          <div>Address:</div>
-          <div>{address}</div>
+      <div>Existed Vault</div>
+      <div key={address}>
+        <div>Address:</div>
+        <div>{address}</div>
+        {vaultLists ? (
+          <div>
+            <Button
+              onPress={async () => {
+                await vaultManagerRef.current?.lock();
+                vaultManagerRef.current = undefined;
+                setVaultLists(undefined);
+                addToast({ title: "Vault locked", color: "success" });
+              }}
+            >
+              Lock Vault
+            </Button>
+            <div>Vault Data:</div>
+            <pre>{JSON.stringify(vaultLists, null, 2)}</pre>
+
+            <VaultLists list={vaultLists} onChange={setVaultLists} />
+          </div>
+        ) : (
           <Button
-            onClick={async () => {
+            onPress={async () => {
               const fileVault = vaultData[address];
               if (!fileVault) {
                 return;
@@ -38,22 +66,15 @@ export default function ExistedVaults(props: {
               const salt = base64ToUint8Array(fileVault.headers.ciphers.salt);
               await vaultManager.unlock(sign, salt);
               addToast({ title: "Vault unlocked", color: "success" });
-              setCurrentVault(vaultManager);
+              setVaultLists(vaultManager.decodedFileVault?.vaults);
+              vaultManagerRef.current = vaultManager;
               console.log("vaultManager", vaultManager);
             }}
           >
-            Unlock
+            Unlock Vault
           </Button>
-          {currentVault && (
-            <div>
-              <div>Vault Data:</div>
-              <pre>
-                {JSON.stringify(currentVault?.decodedFileVault, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
 }

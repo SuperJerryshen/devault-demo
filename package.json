@@ -31,6 +31,7 @@
     "framer-motion": "11.18.2",
     "localforage": "^1.10.0",
     "react": "18.3.1",
+    "react-complex-tree": "^2.6.1",
     "react-dom": "18.3.1",
     "react-router-dom": "6.23.0",
     "tailwind-variants": "3.1.1",
