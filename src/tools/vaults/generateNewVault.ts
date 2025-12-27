@@ -24,6 +24,8 @@ const getDefaultVaults = (): DecodedFileVault["vaults"] => {
       isFolder: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      canMove: true,
+      canRename: true,
       vaultData: {
         url: "https://example.com",
         username: "demoUser",

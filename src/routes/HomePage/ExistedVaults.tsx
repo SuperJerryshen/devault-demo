@@ -3,16 +3,9 @@ import signMessage from "@/tools/wallets/walletSign";
 import { Button } from "@heroui/button";
 import { addToast } from "@heroui/react";
 import { useRef, useState } from "react";
-import * as dek from "@/tools/crypto/dek";
-import {
-  FileVault,
-  VaultItemOrigin,
-  VaultsDataType,
-} from "@/tools/vaults/types";
+import { FileVault, VaultsDataType } from "@/tools/vaults/types";
 import { base64ToUint8Array } from "@/tools/crypto/utils";
 import VaultLists from "./VaultLists";
-
-(window as any).dek = dek;
 
 export default function ExistedVaults(props: {
   address?: `0x${string}`;
@@ -44,10 +37,16 @@ export default function ExistedVaults(props: {
             >
               Lock Vault
             </Button>
-            <div>Vault Data:</div>
-            <pre>{JSON.stringify(vaultLists, null, 2)}</pre>
+            {/* <div>Vault Data:</div>
+            <pre>{JSON.stringify(vaultLists, null, 2)}</pre> */}
 
-            <VaultLists list={vaultLists} onChange={setVaultLists} />
+            <VaultLists
+              list={vaultLists}
+              onChange={(vals) => {
+                console.log("VaultLists onChange", vals);
+                setVaultLists(vals);
+              }}
+            />
           </div>
         ) : (
           <Button

@@ -1,43 +1,33 @@
-import { VaultsDataType } from "@/tools/vaults/types";
-import React, { useState } from "react";
-import {
-  ControlledTreeEnvironment,
-  Tree,
-  TreeItem,
-  TreeItemIndex,
-} from "react-complex-tree";
+import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
+import { useState } from "react";
+import SplitPane from "@uiw/react-split";
+import VaultTrees from "./VaultTrees";
 
 export default function VaultLists(props: {
   list: VaultsDataType;
-  onChange?: (list: VaultsDataType) => void;
+  onChange: (value: VaultsDataType) => void;
 }) {
-  const { list } = props;
-  const [focusedItem, setFocusedItem] = useState<TreeItemIndex>();
-  const [expandedItems, setExpandedItems] = useState<any[]>([]);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const { list, onChange } = props;
+  const [selectedVault, setSelectedVault] = useState<VaultItemOrigin>();
+
   return (
-    <ControlledTreeEnvironment
-      items={list}
-      getItemTitle={(item) => item.data}
-      viewState={{
-        ["tree-2"]: {
-          focusedItem,
-          expandedItems,
-          selectedItems,
-        },
-      }}
-      onFocusItem={(item) => setFocusedItem(item.index)}
-      onExpandItem={(item) => setExpandedItems([...expandedItems, item.index])}
-      onCollapseItem={(item) =>
-        setExpandedItems(
-          expandedItems.filter(
-            (expandedItemIndex) => expandedItemIndex !== item.index
-          )
-        )
-      }
-      onSelectItems={(items) => setSelectedItems(items)}
-    >
-      <Tree treeId="tree-2" rootItem="root" treeLabel="Tree Example" />
-    </ControlledTreeEnvironment>
+    <div className="w-dvw h-dvh flex flex-col">
+      <SplitPane lineBar mode="horizontal" className="flex">
+        <div className="min-w-3xs w-1/3">
+          <VaultTrees
+            value={list}
+            onChange={onChange}
+            onSelect={(id) => {
+              setSelectedVault(list[id]);
+            }}
+          />
+        </div>
+        <div className="w-full min-w-2xs">
+          <div>Vault Editor</div>
+          <div>Vault Data:</div>
+          <pre>{JSON.stringify(selectedVault, null, 2)}</pre>
+        </div>
+      </SplitPane>
+    </div>
   );
 }
