@@ -3,6 +3,7 @@ import {
   dragAndDropFeature,
   hotkeysCoreFeature,
   keyboardDragAndDropFeature,
+  renamingFeature,
   selectionFeature,
   syncDataLoaderFeature,
 } from "@headless-tree/core";
@@ -12,6 +13,7 @@ import { omit } from "lodash-es";
 import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
 import { Button, ButtonGroup } from "@heroui/button";
 import { FolderIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import { addToast } from "@heroui/react";
 
 const VaultTrees = (props: {
   value: VaultsDataType;
@@ -34,6 +36,7 @@ const VaultTrees = (props: {
       hotkeysCoreFeature,
       dragAndDropFeature,
       keyboardDragAndDropFeature,
+      renamingFeature,
     ],
     onDrop: createOnDropHandler((item, newChildren) => {
       value[item.getId()].children = newChildren;
@@ -46,9 +49,20 @@ const VaultTrees = (props: {
         "focusedItem",
         "loadingItemChildrens",
         "loadingItemData",
+        "renamingItem",
+        "renamingValue",
+        "dnd",
       ]) as VaultsDataType;
       onChange(newVal);
-      console.log("setState", val, newVal);
+    },
+    onRename(item, val) {
+      console.log("onRename", item, val);
+      if (!val) {
+        addToast({ title: "Name cannot be empty", color: "danger" });
+        return;
+      }
+      const data = item.getItemData();
+      data.data = val;
     },
   });
 
@@ -143,16 +157,20 @@ const VaultTrees = (props: {
                     <FolderIcon className="w-4 h-4 inline mr-2" />
                   )
                 ) : null}
-                <div
-                  className={cn("treeitem", {
-                    focused: focused,
-                    expanded: expanded,
-                    selected: selected,
-                    folder: folder,
-                  })}
-                >
-                  {item.getItemName()}
-                </div>
+                {item.isRenaming() ? (
+                  <input {...item.getRenameInputProps()} />
+                ) : (
+                  <div
+                    className={cn("treeitem", {
+                      focused: focused,
+                      expanded: expanded,
+                      selected: selected,
+                      folder: folder,
+                    })}
+                  >
+                    {item.getItemName()}
+                  </div>
+                )}
               </div>
             </button>
           );

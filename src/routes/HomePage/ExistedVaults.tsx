@@ -1,19 +1,22 @@
 import VaultManager from "@/tools/vaults/vaultManager";
 import signMessage from "@/tools/wallets/walletSign";
-import { Button } from "@heroui/button";
+import { Button, ButtonGroup } from "@heroui/button";
 import { addToast } from "@heroui/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileVault, VaultsDataType } from "@/tools/vaults/types";
 import { base64ToUint8Array } from "@/tools/crypto/utils";
 import VaultLists from "./VaultLists";
+import localforage from "localforage";
 
 export default function ExistedVaults(props: {
   address?: `0x${string}`;
-  vaultData: { [address: string]: FileVault };
+  vaultData?: FileVault;
 }) {
   const { address, vaultData } = props;
   const vaultManagerRef = useRef<VaultManager>();
   const [vaultLists, setVaultLists] = useState<VaultsDataType>();
+
+  useEffect(() => {}, [vaultLists]);
 
   if (!address) {
     return <div>No address found</div>;
@@ -27,31 +30,59 @@ export default function ExistedVaults(props: {
         <div>{address}</div>
         {vaultLists ? (
           <div>
-            <Button
-              onPress={async () => {
-                await vaultManagerRef.current?.lock();
-                vaultManagerRef.current = undefined;
-                setVaultLists(undefined);
-                addToast({ title: "Vault locked", color: "success" });
-              }}
-            >
-              Lock Vault
-            </Button>
+            <ButtonGroup>
+              <Button
+                onPress={async () => {
+                  await vaultManagerRef.current?.lock();
+                  vaultManagerRef.current = undefined;
+                  setVaultLists(undefined);
+                  addToast({ title: "Vault locked", color: "success" });
+                }}
+              >
+                Lock Vault
+              </Button>
+              <Button
+                onPress={async () => {
+                  const vaultManager = vaultManagerRef.current;
+                  if (vaultManager && vaultManager.decodedFileVault) {
+                    const vaultFile = await vaultManager.encryptFileVault();
+                    console.log("encryptFileVault", vaultFile);
+                    if (!vaultFile) {
+                      addToast({
+                        title: "Failed to encrypt vault",
+                        color: "danger",
+                      });
+                      return;
+                    }
+                    await localforage.setItem<FileVault>(
+                      `vaultdata_${address}`,
+                      vaultFile
+                    );
+                    addToast({ title: "Vault saved", color: "success" });
+                  }
+                }}
+              >
+                Save Vault
+              </Button>
+            </ButtonGroup>
             {/* <div>Vault Data:</div>
             <pre>{JSON.stringify(vaultLists, null, 2)}</pre> */}
 
             <VaultLists
               list={vaultLists}
               onChange={(vals) => {
-                console.log("VaultLists onChange", vals);
                 setVaultLists(vals);
+                const vaultManager = vaultManagerRef.current;
+                if (vaultManager && vaultManager.decodedFileVault) {
+                  vaultManager.decodedFileVault.vaults = vals;
+                }
               }}
             />
           </div>
         ) : (
           <Button
             onPress={async () => {
-              const fileVault = vaultData[address];
+              const fileVault = vaultData;
               if (!fileVault) {
                 return;
               }
@@ -63,7 +94,7 @@ export default function ExistedVaults(props: {
                 return;
               }
               const salt = base64ToUint8Array(fileVault.headers.ciphers.salt);
-              await vaultManager.unlock(sign, salt);
+              await vaultManager.unlock(address, sign, salt);
               addToast({ title: "Vault unlocked", color: "success" });
               setVaultLists(vaultManager.decodedFileVault?.vaults);
               vaultManagerRef.current = vaultManager;

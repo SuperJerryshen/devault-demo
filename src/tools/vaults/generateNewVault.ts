@@ -15,24 +15,27 @@ const getDefaultVaults = (): DecodedFileVault["vaults"] => {
       isFolder: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      children: ["demo1"],
+      // children: ["demo1"],
+      children: [],
+      canMove: false,
+      canRename: false,
       vaultData: null,
     },
-    demo1: {
-      index: "demo1",
-      data: "Demo Website Account",
-      isFolder: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      canMove: true,
-      canRename: true,
-      vaultData: {
-        url: "https://example.com",
-        username: "demoUser",
-        password: "demoPassword",
-        notes: "This is a demo account.",
-      },
-    },
+    // demo1: {
+    //   index: "demo1",
+    //   data: "Demo Website Account",
+    //   isFolder: false,
+    //   createdAt: new Date().toISOString(),
+    //   updatedAt: new Date().toISOString(),
+    //   canMove: true,
+    //   canRename: true,
+    //   vaultData: {
+    //     url: "https://example.com",
+    //     username: "demoUser",
+    //     password: "demoPassword",
+    //     notes: "This is a demo account.",
+    //   },
+    // },
   };
 };
 

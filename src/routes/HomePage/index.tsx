@@ -9,29 +9,23 @@ import { useEffect, useMemo, useState } from "react";
 import localforage from "localforage";
 import { FileVault } from "@/tools/vaults/types";
 
-interface FileVaultStorage {
-  [address: string]: FileVault;
-}
-
 export default function HomePage() {
   const [addresses, setAddresses] = useState<`0x${string}`[]>([]);
-  const [vaultData, setVaultData] = useState<FileVaultStorage>({});
+  const [vaultData, setVaultData] = useState<FileVault>();
   const [loading, setLoading] = useState(false);
 
   const currentVault = useMemo(() => {
     if (addresses.length === 0) {
       return null;
     }
-    const address = addresses[0];
-    return vaultData[address] || null;
+    return vaultData || null;
   }, [addresses, vaultData]);
 
   const getLocalVaultData = async (address: `0x${string}`) => {
-    const vaultData = await localforage.getItem<{
-      [address: string]: FileVault;
-    }>(`vaultdata_${address}`);
-    setVaultData(vaultData || {});
-    console.log("vaultData", vaultData);
+    const vaultData = await localforage.getItem<FileVault>(
+      `vaultdata_${address}`
+    );
+    setVaultData(vaultData || undefined);
   };
 
   useEffect(() => {
@@ -53,7 +47,6 @@ export default function HomePage() {
           onPress={async () => {
             try {
               const addresses = await walletClient.requestAddresses();
-              console.log("addresses", addresses);
               setAddresses(addresses);
               await getLocalVaultData(addresses[0]);
             } catch (error) {
@@ -127,12 +120,11 @@ export default function HomePage() {
                   walletClient.chain
                 );
                 const vaultFile = JSON.parse(JSON.stringify(vaultData[0]));
-                localforage.setItem<FileVaultStorage>(`vaultdata_${address}`, {
-                  [address]: vaultFile,
-                });
-                setVaultData({
-                  [address]: vaultFile,
-                });
+                localforage.setItem<FileVault>(
+                  `vaultdata_${address}`,
+                  vaultFile
+                );
+                setVaultData(vaultFile);
                 addToast({ title: "New vault generated", color: "success" });
               } catch (error) {
                 addToast({

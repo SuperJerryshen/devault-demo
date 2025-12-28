@@ -2,6 +2,7 @@ import {
   decryptBufferSource,
   decryptCryptoKey,
   decryptString,
+  encryptString,
 } from "../crypto/dek";
 import deriveKeyFromSign from "../crypto/deriveKeyFromSign";
 import { base64ToArrayBuffer } from "../crypto/utils";
@@ -11,6 +12,7 @@ export default class VaultManager {
   originalFileVault: FileVault;
   decodedFileVault?: DecodedFileVault;
 
+  address?: `0x${string}`;
   dek?: CryptoKey;
   masterKey?: CryptoKey;
 
@@ -18,10 +20,30 @@ export default class VaultManager {
     this.originalFileVault = fileVault;
   }
 
-  async unlock(sign: string, salt: Uint8Array<ArrayBuffer>) {
+  async encryptFileVault(): Promise<FileVault | null> {
+    if (!this.masterKey || !this.decodedFileVault) {
+      return null;
+    }
+    const vaultsStr = window.encodeURI(
+      JSON.stringify(this.decodedFileVault.vaults)
+    );
+    const vaults = await encryptString(vaultsStr, this.masterKey);
+    const newFileVault: FileVault = {
+      headers: this.decodedFileVault.headers,
+      vaults,
+    };
+    return newFileVault;
+  }
+
+  async unlock(
+    address: `0x${string}`,
+    sign: string,
+    salt: Uint8Array<ArrayBuffer>
+  ) {
     if (!this.originalFileVault) {
       return;
     }
+    this.address = address;
     const { derivedKey } = await deriveKeyFromSign(sign, salt);
     this.dek = await decryptCryptoKey(
       this.originalFileVault.headers.ciphers.dek.cipher,
@@ -46,5 +68,6 @@ export default class VaultManager {
     this.dek = undefined;
     this.masterKey = undefined;
     this.decodedFileVault = undefined;
+    this.address = undefined;
   }
 }
