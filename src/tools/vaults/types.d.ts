@@ -51,6 +51,7 @@ export type VaultItemOrigin<T = any> = {
 };
 
 export type EncodedVaultItem = VaultItemOrigin<string>;
+export type DecodedVaultItemForWebsite = VaultItemOrigin<WebSiteAccountData>;
 
 export type DecodedVaultItemForBaseAccount = VaultItemOrigin<BaseAccountData>;
 
@@ -62,6 +63,7 @@ export interface WebSiteAccountData {
   username: string;
   password: string;
   notes?: string;
+  type: "website";
 }
 export interface BaseAccountData {
   username: string;

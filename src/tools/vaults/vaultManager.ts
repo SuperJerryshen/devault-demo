@@ -1,12 +1,11 @@
-import {
-  decryptBufferSource,
-  decryptCryptoKey,
-  decryptString,
-  encryptString,
-} from "../crypto/dek";
+import { decryptCryptoKey, decryptString, encryptString } from "../crypto/dek";
 import deriveKeyFromSign from "../crypto/deriveKeyFromSign";
-import { base64ToArrayBuffer } from "../crypto/utils";
-import { DecodedFileVault, FileVault } from "./types";
+import {
+  DecodedFileVault,
+  EncodedVaultItem,
+  FileVault,
+  VaultItemOrigin,
+} from "./types";
 
 export default class VaultManager {
   originalFileVault: FileVault;
@@ -61,6 +60,33 @@ export default class VaultManager {
     this.decodedFileVault = {
       headers: this.originalFileVault.headers,
       vaults: JSON.parse(decodeURI(decodedVaultBuffer)),
+    };
+  }
+
+  async decryptVaultItem(
+    encryptedVault: EncodedVaultItem
+  ): Promise<VaultItemOrigin | null> {
+    if (!this.dek) {
+      return null;
+    }
+    const vaultData = await decryptString(encryptedVault.vaultData, this.dek);
+    return {
+      ...encryptedVault,
+      vaultData: JSON.parse(window.decodeURI(vaultData)),
+    };
+  }
+
+  async encryptVaultItem(
+    vault: VaultItemOrigin
+  ): Promise<EncodedVaultItem | null> {
+    if (!this.dek) {
+      return null;
+    }
+    const vaultDataStr = window.encodeURI(JSON.stringify(vault.vaultData));
+    const vaultData = await encryptString(vaultDataStr, this.dek);
+    return {
+      ...vault,
+      vaultData,
     };
   }
 

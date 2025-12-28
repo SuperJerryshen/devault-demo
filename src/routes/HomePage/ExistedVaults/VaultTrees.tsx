@@ -6,6 +6,7 @@ import {
   renamingFeature,
   selectionFeature,
   syncDataLoaderFeature,
+  TreeInstance,
 } from "@headless-tree/core";
 import { useTree } from "@headless-tree/react";
 import cn, { clsx } from "clsx";
@@ -14,13 +15,16 @@ import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
 import { Button, ButtonGroup } from "@heroui/button";
 import { FolderIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
 import { addToast } from "@heroui/react";
+import { useEffect } from "react";
 
 const VaultTrees = (props: {
   value: VaultsDataType;
   onChange: (value: VaultsDataType) => void;
   onSelect: (itemId: string) => void;
+  onAddNewItem?: (vault: VaultItemOrigin) => void;
+  treeRef?: React.MutableRefObject<TreeInstance<VaultItemOrigin>>;
 }) => {
-  const { value, onChange } = props;
+  const { value, onChange, onAddNewItem } = props;
   const tree = useTree<VaultItemOrigin>({
     rootItemId: "root",
     getItemName: (item) => item?.getItemData().data,
@@ -65,6 +69,11 @@ const VaultTrees = (props: {
       data.data = val;
     },
   });
+  useEffect(() => {
+    if (props.treeRef) {
+      props.treeRef.current = tree;
+    }
+  }, [tree]);
 
   return (
     <div>
@@ -99,7 +108,7 @@ const VaultTrees = (props: {
           <Button
             onPress={() => {
               const newItemId = `item-${Date.now()}`;
-              value[newItemId] = {
+              const vault = {
                 index: newItemId,
                 data: "New Item",
                 isFolder: false,
@@ -112,17 +121,19 @@ const VaultTrees = (props: {
                   username: "",
                   password: "",
                   notes: "",
+                  type: "website",
                 },
               };
-              // Add to root's children
-              if (!value["root"].children) {
-                value["root"].children = [];
-              }
-              value["root"].children!.push(newItemId);
-              props.onChange?.({ ...value });
-              setTimeout(() => {
-                tree.rebuildTree();
-              }, 100);
+              onAddNewItem && onAddNewItem(vault);
+              // // Add to root's children
+              // if (!value["root"].children) {
+              //   value["root"].children = [];
+              // }
+              // value["root"].children!.push(newItemId);
+              // props.onChange?.({ ...value });
+              // setTimeout(() => {
+              //   tree.rebuildTree();
+              // }, 100);
             }}
           >
             Add New Item

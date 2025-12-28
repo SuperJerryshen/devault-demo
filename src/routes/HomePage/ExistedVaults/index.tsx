@@ -65,11 +65,9 @@ export default function ExistedVaults(props: {
                 Save Vault
               </Button>
             </ButtonGroup>
-            {/* <div>Vault Data:</div>
-            <pre>{JSON.stringify(vaultLists, null, 2)}</pre> */}
-
             <VaultLists
               list={vaultLists}
+              vaultManagerRef={vaultManagerRef}
               onChange={(vals) => {
                 setVaultLists(vals);
                 const vaultManager = vaultManagerRef.current;
