@@ -7,6 +7,7 @@ import { FileVault, VaultsDataType } from "@/tools/vaults/types";
 import { base64ToUint8Array } from "@/tools/crypto/utils";
 import VaultLists from "./VaultLists";
 import localforage from "localforage";
+import contract from "@/tools/wallets/storageContract";
 
 export default function ExistedVaults(props: {
   address?: `0x${string}`;
@@ -62,6 +63,34 @@ export default function ExistedVaults(props: {
                 }}
               >
                 Save Vault
+              </Button>
+              <Button
+                onPress={async () => {
+                  const result = await contract.read.getIpfs({
+                    account: address,
+                  });
+                  console.log("Contract IPFS:", result);
+                }}
+              >
+                Contract
+              </Button>
+              <Button
+                onPress={async () => {
+                  // const result = await contract.write.setIpfs([
+                  //   `ipfs://examplehash`,
+                  // ]);
+                  // console.log("Contract IPFS:", result);
+
+                  const gas = await contract.write.setIpfs(
+                    [`ipfs://examplehash`],
+                    {
+                      account: address,
+                    }
+                  );
+                  console.log("Estimated Gas:", gas);
+                }}
+              >
+                Contract set ipfs storage
               </Button>
             </ButtonGroup>
             <VaultLists
