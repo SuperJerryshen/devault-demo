@@ -13,7 +13,13 @@ import cn, { clsx } from "clsx";
 import { omit } from "lodash-es";
 import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
 import { Button, ButtonGroup } from "@heroui/button";
-import { FolderIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import {
+  ArchiveBoxXMarkIcon,
+  DocumentPlusIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  FolderPlusIcon,
+} from "@heroicons/react/24/outline";
 import { addToast } from "@heroui/react";
 import { useEffect } from "react";
 
@@ -60,7 +66,6 @@ const VaultTrees = (props: {
       onChange(newVal);
     },
     onRename(item, val) {
-      console.log("onRename", item, val);
       if (!val) {
         addToast({ title: "Name cannot be empty", color: "danger" });
         return;
@@ -151,7 +156,7 @@ const VaultTrees = (props: {
               {...item.getProps()}
               key={item.getId()}
               style={{ paddingLeft: `${item.getItemMeta().level * 20}px` }}
-              className={clsx("w-full", selected ? "bg-blue-200" : "")}
+              className={clsx("w-full group", selected ? "bg-blue-200" : "")}
             >
               <div
                 className="flex items-center"
@@ -172,7 +177,7 @@ const VaultTrees = (props: {
                   <input {...item.getRenameInputProps()} />
                 ) : (
                   <div
-                    className={cn("treeitem", {
+                    className={cn("treeitem flex-1 text-left", {
                       focused: focused,
                       expanded: expanded,
                       selected: selected,
@@ -182,6 +187,66 @@ const VaultTrees = (props: {
                     {item.getItemName()}
                   </div>
                 )}
+                <div className="hidden group-hover:flex space-x-0.5">
+                  <div>
+                    <ArchiveBoxXMarkIcon
+                      className="w-4 h-4 cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const itemId = item.getId();
+                        if (folder) {
+                          addToast({
+                            title:
+                              "Feature development is underway, please wait patiently.",
+                            color: "secondary",
+                          });
+                          return;
+                        }
+
+                        // Delete the item
+                        delete value[itemId];
+                        // Remove from parent's children
+                        const parent = item.getParent()?.getId();
+                        if (parent) {
+                          value[parent].children = value[
+                            parent
+                          ].children?.filter((id) => id !== itemId);
+                        }
+                        tree.rebuildTree();
+                        props.onChange?.({ ...value });
+                      }}
+                    />
+                  </div>
+                  {folder ? (
+                    <>
+                      <div>
+                        <FolderPlusIcon
+                          className="w-4 h-4 cursor-pointer"
+                          onClick={() => {
+                            addToast({
+                              title:
+                                "Feature development is underway, please wait patiently.",
+                              color: "secondary",
+                            });
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <DocumentPlusIcon
+                          className="w-4 h-4 cursor-pointer"
+                          onClick={() => {
+                            addToast({
+                              title:
+                                "Feature development is underway, please wait patiently.",
+                              color: "secondary",
+                            });
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </button>
           );

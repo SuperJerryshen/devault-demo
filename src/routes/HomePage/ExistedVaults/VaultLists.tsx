@@ -47,36 +47,43 @@ export default function VaultLists(props: {
           />
         </div>
         <div className="w-full min-w-2xs p-2">
-          <VaultEditor
-            vault={selectedVault}
-            onSaveVault={async (vault) => {
-              console.log("saveVault", vault);
-              const vaultData = vault.vaultData;
-              const vaultManager = vaultManagerRef.current;
-              if (!vaultManager || !vaultData) {
-                return;
-              }
-              const encodedVault = await vaultManager.encryptVaultItem(vault);
-              if (!encodedVault) {
-                addToast({
-                  title: "Failed to encrypt vault item",
-                  color: "danger",
-                });
-                return;
-              }
-              list[vault.index] = encodedVault;
-              list.root.children?.push(vault.index);
-              onChange({ ...list });
-              setSelectedVault(undefined);
-              setTimeout(() => {
-                treeRef.current?.rebuildTree();
-              }, 100);
-              console.log("encodedVault", encodedVault, list);
-            }}
-            onCancel={() => {
-              setSelectedVault(undefined);
-            }}
-          />
+          {selectedVault ? (
+            <VaultEditor
+              vault={selectedVault}
+              onSaveVault={async (vault) => {
+                const vaultData = vault.vaultData;
+                const vaultManager = vaultManagerRef.current;
+                if (!vaultManager || !vaultData) {
+                  return;
+                }
+                const encodedVault = await vaultManager.encryptVaultItem(vault);
+                if (!encodedVault) {
+                  addToast({
+                    title: "Failed to encrypt vault item",
+                    color: "danger",
+                  });
+                  return;
+                }
+                const isNewVault = !list[vault.index];
+                list[vault.index] = encodedVault;
+                if (isNewVault) {
+                  list.root.children?.push(vault.index);
+                }
+                onChange({ ...list });
+                setSelectedVault(undefined);
+                setTimeout(() => {
+                  treeRef.current?.rebuildTree();
+                }, 100);
+              }}
+              onCancel={() => {
+                setSelectedVault(undefined);
+              }}
+            />
+          ) : (
+            <div>
+              <div>No vault selected.</div>
+            </div>
+          )}
         </div>
       </SplitPane>
     </div>

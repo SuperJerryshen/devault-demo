@@ -46,7 +46,6 @@ export default function ExistedVaults(props: {
                   const vaultManager = vaultManagerRef.current;
                   if (vaultManager && vaultManager.decodedFileVault) {
                     const vaultFile = await vaultManager.encryptFileVault();
-                    console.log("encryptFileVault", vaultFile);
                     if (!vaultFile) {
                       addToast({
                         title: "Failed to encrypt vault",
@@ -86,7 +85,6 @@ export default function ExistedVaults(props: {
               }
               const vaultManager = new VaultManager(fileVault);
               const sign = await signMessage();
-              console.log("decrypting with sign:", sign);
               if (!sign) {
                 addToast({ title: "Failed to sign message", color: "danger" });
                 return;
@@ -96,7 +94,6 @@ export default function ExistedVaults(props: {
               addToast({ title: "Vault unlocked", color: "success" });
               setVaultLists(vaultManager.decodedFileVault?.vaults);
               vaultManagerRef.current = vaultManager;
-              console.log("vaultManager", vaultManager);
             }}
           >
             Unlock Vault
