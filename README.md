@@ -1,5 +1,3 @@
-# DeVault Project Skills
-
 ## Project Overview
 
 DeVault 是一个去中心化密码管理器，使用区块链 + IPFS 进行数据存储。
