@@ -3,7 +3,7 @@
  * @param sign - The sign string to derive the key from.
  * @returns
  */
-async function deriveKeyFromSign(sign: string, salt?: Uint8Array<ArrayBuffer>) {
+async function deriveKeyFromSign(sign: string, salt?: Uint8Array) {
   const baseKey = await window.crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(sign),

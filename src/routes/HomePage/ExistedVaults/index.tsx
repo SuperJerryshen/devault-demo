@@ -8,6 +8,7 @@ import { base64ToUint8Array } from "@/tools/crypto/utils";
 import VaultLists from "./VaultLists";
 import localforage from "localforage";
 import contract from "@/tools/wallets/storageContract";
+import { uploadToIpfs, getFromIpfs, saveToLocalCache, getFromLocalCache } from "@/tools/ipfs";
 
 export default function ExistedVaults(props: {
   address?: `0x${string}`;
@@ -76,18 +77,53 @@ export default function ExistedVaults(props: {
               </Button>
               <Button
                 onPress={async () => {
-                  // const result = await contract.write.setIpfs([
-                  //   `ipfs://examplehash`,
-                  // ]);
-                  // console.log("Contract IPFS:", result);
+                  const vaultManager = vaultManagerRef.current;
+                  if (vaultManager && vaultManager.decodedFileVault) {
+                    try {
+                      // 1. 加密 Vault
+                      const vaultFile = await vaultManager.encryptFileVault();
+                      if (!vaultFile) {
+                        addToast({
+                          title: "Failed to encrypt vault",
+                          color: "danger",
+                        });
+                        return;
+                      }
 
-                  const gas = await contract.write.setIpfs(
-                    [`ipfs://examplehash`],
-                    {
-                      account: address,
+                      // 2. 上传到 IPFS
+                      addToast({ title: "Uploading to IPFS...", color: "primary" });
+                      const cid = await uploadToIpfs(vaultFile);
+
+                      // 3. 同步 CID 到区块链
+                      addToast({ title: "Syncing CID to blockchain...", color: "primary" });
+                      const hash = await contract.write.setIpfs([cid], {
+                        account: address,
+                      });
+
+                      // 4. 保存到本地缓存
+                      await saveToLocalCache(cid, vaultFile);
+
+                      // 5. 同时保存一份到本地（兼容旧的存储方式）
+                      await localforage.setItem<FileVault>(
+                        `vaultdata_${address}`,
+                        vaultFile
+                      );
+
+                      addToast({
+                        title: `IPFS CID: ${cid}`,
+                        description: "Successfully saved to IPFS and blockchain",
+                        color: "success",
+                      });
+                      console.log("Transaction hash:", hash);
+                    } catch (error) {
+                      console.error("Failed to save to IPFS:", error);
+                      addToast({
+                        title: "Failed to save to IPFS",
+                        description: String(error),
+                        color: "danger",
+                      });
                     }
-                  );
-                  console.log("Estimated Gas:", gas);
+                  }
                 }}
               >
                 Contract set ipfs storage
@@ -128,6 +164,72 @@ export default function ExistedVaults(props: {
             Unlock Vault
           </Button>
         )}
+        <Button
+          onPress={async () => {
+            try {
+              // 1. 从智能合约获取 CID
+              addToast({ title: "Fetching CID from blockchain...", color: "primary" });
+              const cid = await contract.read.getIpfs({
+                account: address,
+              });
+
+              if (!cid) {
+                addToast({
+                  title: "No IPFS CID found",
+                  description: "No vault data found on blockchain for this address",
+                  color: "warning",
+                });
+                return;
+              }
+
+              console.log("Contract IPFS CID:", cid);
+
+              // 2. 先检查本地缓存
+              addToast({ title: "Checking local cache...", color: "primary" });
+              const cachedData = await getFromLocalCache<FileVault>(cid);
+
+              let vaultData: FileVault | null = cachedData;
+              let fromCache = !!cachedData;
+
+              // 3. 如果缓存没有，从 IPFS 获取
+              if (!vaultData) {
+                addToast({ title: "Fetching from IPFS...", color: "primary" });
+                vaultData = await getFromIpfs<FileVault>(cid);
+
+                if (!vaultData) {
+                  addToast({
+                    title: "Failed to fetch from IPFS",
+                    description: "Could not retrieve vault data from IPFS",
+                    color: "danger",
+                  });
+                  return;
+                }
+
+                // 4. 保存到本地缓存
+                await saveToLocalCache(cid, vaultData);
+                fromCache = false;
+              }
+
+              addToast({
+                title: "Successfully retrieved vault data",
+                description: fromCache ? "Loaded from local cache" : "Loaded from IPFS",
+                color: "success",
+              });
+
+              console.log("Vault data from IPFS:", vaultData);
+              alert(`Vault data retrieved successfully!\nCID: ${cid}\nSource: ${fromCache ? "Local Cache" : "IPFS"}\n\nCheck console for details.`);
+            } catch (error) {
+              console.error("Failed to get IPFS content:", error);
+              addToast({
+                title: "Failed to get IPFS content",
+                description: String(error),
+                color: "danger",
+              });
+            }
+          }}
+        >
+          Get IPFS Content
+        </Button>
       </div>
     </div>
   );

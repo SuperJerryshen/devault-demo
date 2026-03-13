@@ -37,7 +37,7 @@ export default class VaultManager {
   async unlock(
     address: `0x${string}`,
     sign: string,
-    salt: Uint8Array<ArrayBuffer>
+    salt: Uint8Array
   ) {
     if (!this.originalFileVault) {
       return;

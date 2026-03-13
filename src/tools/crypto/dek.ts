@@ -24,7 +24,7 @@ export async function generateNewEncryptionKey(): Promise<CryptoKey> {
 export async function encryptBufferSource(
   buffer: ArrayBuffer,
   key: CryptoKey
-): Promise<Uint8Array<ArrayBuffer>> {
+): Promise<Uint8Array> {
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encryptedDEK = await window.crypto.subtle.encrypt(
     {
@@ -97,7 +97,7 @@ export async function decryptCryptoKey(
 }
 
 export async function decryptDEK(
-  encryptedDEKWithIV: Uint8Array<ArrayBuffer>,
+  encryptedDEKWithIV: Uint8Array,
   derivedKey: CryptoKey
 ): Promise<CryptoKey> {
   let decryptedDEKBuffer = await decryptBufferSource(

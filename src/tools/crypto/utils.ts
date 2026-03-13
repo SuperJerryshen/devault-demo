@@ -1,13 +1,11 @@
-export function uint8ArrayToBase64(
-  byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>
-): string {
+export function uint8ArrayToBase64(byteArray: Uint8Array): string {
   return btoa(uint8ArrayToString(byteArray));
 }
 export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const byteArray = new Uint8Array(buffer);
   return uint8ArrayToBase64(byteArray);
 }
-export function base64ToUint8Array(base64Str: string): Uint8Array<ArrayBuffer> {
+export function base64ToUint8Array(base64Str: string): Uint8Array {
   return stringToUint8Array(atob(base64Str));
 }
 export function base64ToArrayBuffer(base64Str: string): ArrayBuffer {
@@ -15,9 +13,7 @@ export function base64ToArrayBuffer(base64Str: string): ArrayBuffer {
   return byteArray.buffer;
 }
 
-export function uint8ArrayToString(
-  byteArray: Uint8Array<ArrayBuffer | ArrayBufferLike>
-): string {
+export function uint8ArrayToString(byteArray: Uint8Array): string {
   let binaryString = "";
   for (let i = 0; i < byteArray.byteLength; i++) {
     binaryString += String.fromCharCode(byteArray[i]);
@@ -28,7 +24,7 @@ export function arrayBufferToString(buffer: ArrayBuffer) {
   return uint8ArrayToString(new Uint8Array(buffer));
 }
 
-export function stringToUint8Array(str: string): Uint8Array<ArrayBuffer> {
+export function stringToUint8Array(str: string): Uint8Array {
   const byteArray = new Uint8Array(str.length);
   for (let i = 0; i < str.length; i++) {
     byteArray[i] = str.charCodeAt(i);
@@ -40,9 +36,7 @@ export function stringToArrayBuffer(str: string): ArrayBuffer {
   return byteArray.buffer;
 }
 
-export function uint8ArrayToHextString(
-  byteArray: Uint8Array<ArrayBuffer>
-): string {
+export function uint8ArrayToHextString(byteArray: Uint8Array): string {
   return (
     "0x" +
     Array.from(byteArray)
@@ -53,7 +47,7 @@ export function uint8ArrayToHextString(
 
 export function hexStringToUint8Array(
   hexString: string
-): Uint8Array<ArrayBuffer> {
+): Uint8Array {
   const cleanedHexString = hexString.startsWith("0x")
     ? hexString.slice(2)
     : hexString;

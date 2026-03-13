@@ -1,4 +1,4 @@
-import { addToast, toast } from "@heroui/react";
+import { addToast } from "@heroui/react";
 import walletClient from "./walletClient";
 
 async function signMessage() {
