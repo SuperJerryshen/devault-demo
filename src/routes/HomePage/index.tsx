@@ -1,4 +1,4 @@
-import { addToast, Button, Spinner } from "@heroui/react";
+import { toast, Button, Spinner } from "@heroui/react";
 import signMessage from "../../tools/wallets/walletSign";
 import walletClient from "../../tools/wallets/walletClient";
 import publicClient from "../../tools/wallets/publicClient";
@@ -52,7 +52,7 @@ export default function HomePage() {
       // 3. 从 IPFS 获取
       console.log("Fetching from IPFS...");
       const ipfsData = await getFromIpfs<FileVault>(cid);
-      
+
       if (!ipfsData) {
         console.log("Failed to fetch from IPFS");
         return null;
@@ -67,7 +67,7 @@ export default function HomePage() {
       // 5. 保存到本地缓存
       await saveToLocalCache(cid, ipfsData);
       console.log("Successfully fetched and cached vault data from IPFS");
-      
+
       return ipfsData;
     } catch (error) {
       console.error("Error checking chain for CID:", error);
@@ -83,12 +83,12 @@ export default function HomePage() {
         setCheckingChain(false);
         return;
       }
-      
+
       // 先尝试从本地加载
       const localVault = await localforage.getItem<FileVault>(
         `vaultdata_${addrs[0]}`
       );
-      
+
       if (localVault) {
         console.log("Found local vault data");
         setVaultData(localVault);
@@ -102,7 +102,7 @@ export default function HomePage() {
         console.log("Found vault data from chain/IPFS");
         setVaultData(chainVault);
       }
-      
+
       setCheckingChain(false);
     }
     fetchAddresses();
@@ -117,18 +117,15 @@ export default function HomePage() {
               const addresses = await walletClient.requestAddresses();
               setAddresses(addresses);
               setCheckingChain(true);
-              
+
               // 检查链上 CID
               const chainVault = await checkChainForCID(addresses[0]);
               if (chainVault) {
                 setVaultData(chainVault);
-                addToast({
-                  title: "Vault restored from IPFS",
-                  color: "success",
-                });
+                toast.success("Vault restored from IPFS");
               }
             } catch (error) {
-              addToast({ title: "Failed to connect wallet", color: "danger" });
+              toast.danger("Failed to connect wallet");
             } finally {
               setCheckingChain(false);
             }
@@ -144,10 +141,13 @@ export default function HomePage() {
   if (checkingChain) {
     return (
       <div className="flex flex-col items-center justify-center py-10">
-        <Spinner size="lg" label="Checking blockchain for vault data..." />
-        <p className="mt-4 text-sm text-gray-500">
-          Fetching CID from smart contract and IPFS...
-        </p>
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="lg" />
+          <p className="text-sm text-gray-500">Checking blockchain for vault data...</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Fetching CID from smart contract and IPFS...
+          </p>
+        </div>
       </div>
     );
   }
@@ -159,7 +159,7 @@ export default function HomePage() {
       ) : (
         <div>
           <Button
-            isLoading={loading}
+            isDisabled={loading}
             onPress={async () => {
               try {
                 setLoading(true);
@@ -168,10 +168,7 @@ export default function HomePage() {
                   sign = await signMessage();
                 } catch (error) {}
                 if (!sign) {
-                  addToast({
-                    title: "Failed to sign message",
-                    color: "danger",
-                  });
+                  toast.danger("Failed to sign message");
                   return;
                 }
                 const address = addresses[0];
@@ -199,10 +196,7 @@ export default function HomePage() {
                   address,
                 });
                 if (!result) {
-                  addToast({
-                    title: "Failed to verify signature",
-                    color: "danger",
-                  });
+                  toast.danger("Failed to verify signature");
                   return;
                 }
                 const { derivedKey, salt } = await deriveKeyFromSign(sign);
@@ -217,18 +211,15 @@ export default function HomePage() {
                   vaultFile
                 );
                 setVaultData(vaultFile);
-                addToast({ title: "New vault generated", color: "success" });
+                toast.success("New vault generated");
               } catch (error) {
-                addToast({
-                  title: "Failed to generate new vault",
-                  color: "danger",
-                });
+                toast.danger("Failed to generate new vault");
               } finally {
                 setLoading(false);
               }
             }}
           >
-            Generate New Vault
+            {loading ? "Generating..." : "Generate New Vault"}
           </Button>
         </div>
       )}

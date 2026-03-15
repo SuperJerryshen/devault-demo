@@ -12,7 +12,7 @@ import { useTree } from "@headless-tree/react";
 import cn, { clsx } from "clsx";
 import { omit } from "lodash-es";
 import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
-import { Button, ButtonGroup } from "@heroui/button";
+import { Button, ButtonGroup, toast } from "@heroui/react";
 import {
   ArchiveBoxXMarkIcon,
   DocumentPlusIcon,
@@ -20,7 +20,6 @@ import {
   FolderOpenIcon,
   FolderPlusIcon,
 } from "@heroicons/react/24/outline";
-import { addToast } from "@heroui/react";
 import { useEffect } from "react";
 
 const VaultTrees = (props: {
@@ -67,7 +66,7 @@ const VaultTrees = (props: {
     },
     onRename(item, val) {
       if (!val) {
-        addToast({ title: "Name cannot be empty", color: "danger" });
+        toast.danger("Name cannot be empty");
         return;
       }
       const data = item.getItemData();
@@ -196,11 +195,9 @@ const VaultTrees = (props: {
                         e.stopPropagation();
                         const itemId = item.getId();
                         if (folder) {
-                          addToast({
-                            title:
-                              "Feature development is underway, please wait patiently.",
-                            color: "secondary",
-                          });
+                          toast.info(
+                            "Feature development is underway, please wait patiently."
+                          );
                           return;
                         }
 
@@ -224,11 +221,9 @@ const VaultTrees = (props: {
                         <FolderPlusIcon
                           className="w-4 h-4 cursor-pointer"
                           onClick={() => {
-                            addToast({
-                              title:
-                                "Feature development is underway, please wait patiently.",
-                              color: "secondary",
-                            });
+                            toast.info(
+                              "Feature development is underway, please wait patiently."
+                            );
                           }}
                         />
                       </div>
@@ -236,11 +231,9 @@ const VaultTrees = (props: {
                         <DocumentPlusIcon
                           className="w-4 h-4 cursor-pointer"
                           onClick={() => {
-                            addToast({
-                              title:
-                                "Feature development is underway, please wait patiently.",
-                              color: "secondary",
-                            });
+                            toast.info(
+                              "Feature development is underway, please wait patiently."
+                            );
                           }}
                         />
                       </div>

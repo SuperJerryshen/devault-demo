@@ -1,4 +1,4 @@
-import { addToast } from "@heroui/react";
+import { toast } from "@heroui/react";
 import walletClient from "./walletClient";
 
 async function signMessage() {
@@ -9,7 +9,7 @@ async function signMessage() {
     try {
       addresses = await walletClient.requestAddresses();
     } catch (error) {
-      addToast({ title: "Please connect your wallet first", color: "danger" });
+      toast.danger("Please connect your wallet first");
       return;
     }
   }
@@ -34,10 +34,6 @@ async function signMessage() {
       purpose: "Vault Access",
       tips: "Sign this message to access your vault securely.",
     },
-    account,
-  });
-  return await walletClient.signMessage({
-    message: "Hello, Devault!",
     account,
   });
 }

@@ -3,7 +3,7 @@ import {
   DecodedVaultItemForWebsite,
   WebSiteAccountData,
 } from "@/tools/vaults/types";
-import { Form, Input, Button, ButtonGroup, addToast } from "@heroui/react";
+import { Button, ButtonGroup, toast } from "@heroui/react";
 import { useEffect, useState } from "react";
 
 export default function VaultEditor(props: {
@@ -32,8 +32,8 @@ export default function VaultEditor(props: {
   return (
     <div>
       <div>Vault Editor</div>
-      <Form
-        className="pb-30"
+      <form
+        className="pb-30 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (vault) {
@@ -43,53 +43,64 @@ export default function VaultEditor(props: {
                 ...formData,
               },
             });
-            addToast({ title: "Vault saved", color: "success" });
+            toast.success("Vault saved");
           }
         }}
       >
-        <Input
-          value={formData.username}
-          name="username"
-          type="text"
-          required
-          label="User Name"
-          onChange={(e) => {
-            handleFormValueChange("username", e.target.value);
-          }}
-        />
-        <PasswordInput
-          value={formData.password}
-          required
-          name="password"
-          label="Password"
-          onChange={(e) => {
-            handleFormValueChange("password", e.target.value);
-          }}
-        />
-        <Input
-          value={formData.url}
-          name="url"
-          type="text"
-          label="URL"
-          onChange={(e) => {
-            handleFormValueChange("url", e.target.value);
-          }}
-        />
-        <Input
-          value={formData.notes}
-          name="notes"
-          type="text"
-          label="Notes"
-          onChange={(e) => {
-            handleFormValueChange("notes", e.target.value);
-          }}
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium">User Name</label>
+          <input
+            value={formData.username}
+            name="username"
+            type="text"
+            required
+            className="w-full px-3 py-2 border rounded-md"
+            onChange={(e) => {
+              handleFormValueChange("username", e.target.value);
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Password</label>
+          <PasswordInput
+            value={formData.password}
+            required
+            name="password"
+            onChange={(e) => {
+              handleFormValueChange("password", e.target.value);
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">URL</label>
+          <input
+            value={formData.url}
+            name="url"
+            type="text"
+            className="w-full px-3 py-2 border rounded-md"
+            onChange={(e) => {
+              handleFormValueChange("url", e.target.value);
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Notes</label>
+          <input
+            value={formData.notes}
+            name="notes"
+            type="text"
+            className="w-full px-3 py-2 border rounded-md"
+            onChange={(e) => {
+              handleFormValueChange("notes", e.target.value);
+            }}
+          />
+        </div>
 
         <ButtonGroup>
           <Button type="submit">Save</Button>
           <Button onPress={onCancel}>Cancel</Button>
         </ButtonGroup>
-      </Form>
+      </form>
     </div>
   );
 }

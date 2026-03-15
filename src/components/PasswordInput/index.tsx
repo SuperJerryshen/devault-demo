@@ -1,19 +1,21 @@
-import { Input, InputProps } from "@heroui/input";
+import { Input, InputGroup, InputGroupSuffix, InputProps } from "@heroui/react";
 import React from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function PasswordInput(
-  props: Omit<InputProps, "type" | "endContent">
+  props: Omit<InputProps, "type">
 ) {
   const [isVisible, setIsVisible] = React.useState(false);
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
-    <Input
-      {...props}
-      type={isVisible ? "text" : "password"}
-      endContent={
+    <InputGroup>
+      <Input
+        {...props}
+        type={isVisible ? "text" : "password"}
+      />
+      <InputGroupSuffix>
         <button
           aria-label="toggle password visibility"
           className="focus:outline-solid outline-transparent w-6 h-6 cursor-pointer"
@@ -26,7 +28,7 @@ export default function PasswordInput(
             <EyeIcon className="text-2xl text-default-400 pointer-events-none" />
           )}
         </button>
-      }
-    />
+      </InputGroupSuffix>
+    </InputGroup>
   );
 }

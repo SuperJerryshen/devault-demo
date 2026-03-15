@@ -6,10 +6,10 @@ DeVault 是一个去中心化密码管理器，使用区块链 + IPFS 进行数�
 
 | Category             | Technology                           |
 | -------------------- | ------------------------------------ |
-| Frontend Framework   | React 18.3.1 + TypeScript            |
-| UI Component Library | @heroui/react 2.8.6                  |
+| Frontend Framework   | React 19.2.4 + TypeScript            |
+| UI Component Library | @heroui/react 3.0.0-rc.1 (HeroUI v3) |
 | Blockchain           | viem 2.43.1 (Ethereum Sepolia)       |
-| IPFS                 | helia 6.0.14 + @helia/json           |
+| IPFS                 | Pinata 2.5.5                         |
 | Local Storage        | localforage 1.10.0 (IndexedDB)       |
 | Build Tool           | Vite 6.0.11                          |
 | Styling              | Tailwind CSS 4.1.11                  |

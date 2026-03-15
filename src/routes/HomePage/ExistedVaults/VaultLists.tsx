@@ -4,7 +4,7 @@ import SplitPane from "@uiw/react-split";
 import VaultTrees from "./VaultTrees";
 import VaultEditor from "./VaultEditor";
 import VaultManager from "@/tools/vaults/vaultManager";
-import { addToast } from "@heroui/react";
+import { toast } from "@heroui/react";
 import { TreeInstance } from "@headless-tree/core";
 
 export default function VaultLists(props: {
@@ -33,10 +33,7 @@ export default function VaultLists(props: {
               const decodedVault =
                 await vaultManagerRef.current?.decryptVaultItem(encodedVault);
               if (!decodedVault) {
-                addToast({
-                  title: "Failed to decrypt vault item",
-                  color: "danger",
-                });
+                toast.danger("Failed to decrypt vault item");
                 return;
               }
               setSelectedVault(decodedVault);
@@ -58,10 +55,7 @@ export default function VaultLists(props: {
                 }
                 const encodedVault = await vaultManager.encryptVaultItem(vault);
                 if (!encodedVault) {
-                  addToast({
-                    title: "Failed to encrypt vault item",
-                    color: "danger",
-                  });
+                  toast.danger("Failed to encrypt vault item");
                   return;
                 }
                 const isNewVault = !list[vault.index];

@@ -1,7 +1,6 @@
 import VaultManager from "@/tools/vaults/vaultManager";
 import signMessage from "@/tools/wallets/walletSign";
-import { Button, ButtonGroup } from "@heroui/button";
-import { addToast } from "@heroui/react";
+import { Button, ButtonGroup, toast } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import { FileVault, VaultsDataType } from "@/tools/vaults/types";
 import { base64ToUint8Array } from "@/tools/crypto/utils";
@@ -15,7 +14,7 @@ export default function ExistedVaults(props: {
   vaultData?: FileVault;
 }) {
   const { address, vaultData } = props;
-  const vaultManagerRef = useRef<VaultManager>();
+  const vaultManagerRef = useRef<VaultManager>(undefined);
   const [vaultLists, setVaultLists] = useState<VaultsDataType>();
 
   useEffect(() => {}, [vaultLists]);
@@ -38,7 +37,7 @@ export default function ExistedVaults(props: {
                   await vaultManagerRef.current?.lock();
                   vaultManagerRef.current = undefined;
                   setVaultLists(undefined);
-                  addToast({ title: "Vault locked", color: "success" });
+                  toast.success("Vault locked");
                 }}
               >
                 Lock Vault
@@ -49,17 +48,14 @@ export default function ExistedVaults(props: {
                   if (vaultManager && vaultManager.decodedFileVault) {
                     const vaultFile = await vaultManager.encryptFileVault();
                     if (!vaultFile) {
-                      addToast({
-                        title: "Failed to encrypt vault",
-                        color: "danger",
-                      });
+                      toast.danger("Failed to encrypt vault");
                       return;
                     }
                     await localforage.setItem<FileVault>(
                       `vaultdata_${address}`,
                       vaultFile
                     );
-                    addToast({ title: "Vault saved", color: "success" });
+                    toast.success("Vault saved");
                   }
                 }}
               >
@@ -83,19 +79,16 @@ export default function ExistedVaults(props: {
                       // 1. 加密 Vault
                       const vaultFile = await vaultManager.encryptFileVault();
                       if (!vaultFile) {
-                        addToast({
-                          title: "Failed to encrypt vault",
-                          color: "danger",
-                        });
+                        toast.danger("Failed to encrypt vault");
                         return;
                       }
 
                       // 2. 上传到 IPFS
-                      addToast({ title: "Uploading to IPFS...", color: "primary" });
+                      toast.info("Uploading to IPFS...");
                       const cid = await uploadToIpfs(vaultFile);
 
                       // 3. 同步 CID 到区块链
-                      addToast({ title: "Syncing CID to blockchain...", color: "primary" });
+                      toast.info("Syncing CID to blockchain...");
                       const hash = await contract.write.setIpfs([cid], {
                         account: address,
                       });
@@ -109,18 +102,14 @@ export default function ExistedVaults(props: {
                         vaultFile
                       );
 
-                      addToast({
-                        title: `IPFS CID: ${cid}`,
+                      toast.success(`IPFS CID: ${cid}`, {
                         description: "Successfully saved to IPFS and blockchain",
-                        color: "success",
                       });
                       console.log("Transaction hash:", hash);
                     } catch (error) {
                       console.error("Failed to save to IPFS:", error);
-                      addToast({
-                        title: "Failed to save to IPFS",
+                      toast.danger("Failed to save to IPFS", {
                         description: String(error),
-                        color: "danger",
                       });
                     }
                   }
@@ -151,12 +140,12 @@ export default function ExistedVaults(props: {
               const vaultManager = new VaultManager(fileVault);
               const sign = await signMessage();
               if (!sign) {
-                addToast({ title: "Failed to sign message", color: "danger" });
+                toast.danger("Failed to sign message");
                 return;
               }
               const salt = base64ToUint8Array(fileVault.headers.ciphers.salt);
               await vaultManager.unlock(address, sign, salt);
-              addToast({ title: "Vault unlocked", color: "success" });
+              toast.success("Vault unlocked");
               setVaultLists(vaultManager.decodedFileVault?.vaults);
               vaultManagerRef.current = vaultManager;
             }}
@@ -168,16 +157,14 @@ export default function ExistedVaults(props: {
           onPress={async () => {
             try {
               // 1. 从智能合约获取 CID
-              addToast({ title: "Fetching CID from blockchain...", color: "primary" });
+              toast.info("Fetching CID from blockchain...");
               const cid = await contract.read.getIpfs({
                 account: address,
               });
 
               if (!cid) {
-                addToast({
-                  title: "No IPFS CID found",
+                toast.warning("No IPFS CID found", {
                   description: "No vault data found on blockchain for this address",
-                  color: "warning",
                 });
                 return;
               }
@@ -185,7 +172,7 @@ export default function ExistedVaults(props: {
               console.log("Contract IPFS CID:", cid);
 
               // 2. 先检查本地缓存
-              addToast({ title: "Checking local cache...", color: "primary" });
+              toast.info("Checking local cache...");
               const cachedData = await getFromLocalCache<FileVault>(cid);
 
               let vaultData: FileVault | null = cachedData;
@@ -193,14 +180,12 @@ export default function ExistedVaults(props: {
 
               // 3. 如果缓存没有，从 IPFS 获取
               if (!vaultData) {
-                addToast({ title: "Fetching from IPFS...", color: "primary" });
+                toast.info("Fetching from IPFS...");
                 vaultData = await getFromIpfs<FileVault>(cid);
 
                 if (!vaultData) {
-                  addToast({
-                    title: "Failed to fetch from IPFS",
+                  toast.danger("Failed to fetch from IPFS", {
                     description: "Could not retrieve vault data from IPFS",
-                    color: "danger",
                   });
                   return;
                 }
@@ -210,20 +195,16 @@ export default function ExistedVaults(props: {
                 fromCache = false;
               }
 
-              addToast({
-                title: "Successfully retrieved vault data",
+              toast.success("Successfully retrieved vault data", {
                 description: fromCache ? "Loaded from local cache" : "Loaded from IPFS",
-                color: "success",
               });
 
               console.log("Vault data from IPFS:", vaultData);
               alert(`Vault data retrieved successfully!\nCID: ${cid}\nSource: ${fromCache ? "Local Cache" : "IPFS"}\n\nCheck console for details.`);
             } catch (error) {
               console.error("Failed to get IPFS content:", error);
-              addToast({
-                title: "Failed to get IPFS content",
+              toast.danger("Failed to get IPFS content", {
                 description: String(error),
-                color: "danger",
               });
             }
           }}
