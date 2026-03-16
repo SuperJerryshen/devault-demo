@@ -238,7 +238,6 @@ const VaultTrees = (props: {
           const focused = item.isFocused();
           const expanded = item.isExpanded();
           const selected = item.isSelected();
-          // const isEdit =
           const isFolder = item.isFolder();
           const itemId = item.getId();
           const isRoot = itemId === "root";
@@ -251,7 +250,11 @@ const VaultTrees = (props: {
           if (isRoot) return null;
 
           return (
-            <div key={itemId} className="group relative">
+            <div
+              key={itemId}
+              className="group relative"
+              onDoubleClick={() => item.startRenaming()}
+            >
               <div
                 {...item.getProps()}
                 style={{ paddingLeft: `${item.getItemMeta().level * 24}px` }}
