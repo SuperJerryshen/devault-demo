@@ -50,7 +50,7 @@ const VaultTrees = (props: {
           deleteItemRecursively(childId, newValue);
         }
       }
-      for (const [id, currentItem] of Object.entries(newValue)) {
+      for (const [, currentItem] of Object.entries(newValue)) {
         if (currentItem.children) {
           currentItem.children = currentItem.children.filter(
             (cid) => cid !== itemId,
