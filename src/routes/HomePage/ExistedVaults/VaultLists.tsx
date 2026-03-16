@@ -4,7 +4,7 @@ import SplitPane from "@uiw/react-split";
 import VaultTrees from "./VaultTrees";
 import VaultEditor from "./VaultEditor";
 import VaultManager from "@/tools/vaults/vaultManager";
-import { Card, Button } from "@heroui/react";
+import { Card } from "@heroui/react";
 import { toast } from "@heroui/react";
 import { TreeInstance } from "@headless-tree/core";
 import {
@@ -33,6 +33,7 @@ export default function VaultLists(props: {
           <VaultTrees
             treeRef={treeRef}
             value={list}
+            selectedVault={selectedVault}
             onChange={onChange}
             onSelect={async (id) => {
               const encodedVault = list[id];
@@ -66,7 +67,8 @@ export default function VaultLists(props: {
                   if (!vaultManager || !vaultData) {
                     return;
                   }
-                  const encodedVault = await vaultManager.encryptVaultItem(vault);
+                  const encodedVault =
+                    await vaultManager.encryptVaultItem(vault);
                   if (!encodedVault) {
                     toast.danger("Failed to encrypt vault item");
                     return;
@@ -102,7 +104,8 @@ export default function VaultLists(props: {
                       Select an Item
                     </div>
                     <div className="text-sm text-default-500">
-                      Choose an item from the tree on the left to view or edit its details
+                      Choose an item from the tree on the left to view or edit
+                      its details
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 w-full">

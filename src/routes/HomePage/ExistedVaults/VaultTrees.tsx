@@ -11,7 +11,11 @@ import {
 import { useTree } from "@headless-tree/react";
 import { clsx } from "clsx";
 import { omit } from "lodash-es";
-import { VaultItemOrigin, VaultsDataType } from "@/tools/vaults/types";
+import {
+  DecodedVaultItemForWebsite,
+  VaultItemOrigin,
+  VaultsDataType,
+} from "@/tools/vaults/types";
 import { Button, toast } from "@heroui/react";
 import {
   TrashIcon,
@@ -31,58 +35,69 @@ const VaultTrees = (props: {
   onSelect: (itemId: string) => void;
   onAddNewItem?: (vault: VaultItemOrigin) => void;
   treeRef?: React.MutableRefObject<TreeInstance<VaultItemOrigin>>;
+  selectedVault?: DecodedVaultItemForWebsite;
 }) => {
-  const { value, onChange, onAddNewItem } = props;
+  const { value, onChange, onAddNewItem, selectedVault } = props;
 
   // 递归删除函数，用于删除文件夹及其所有子项
-  const deleteItemRecursively = useCallback((itemId: string, currentValue: VaultsDataType): VaultsDataType => {
-    const newValue = { ...currentValue };
-    const item = newValue[itemId];
-    if (!item) return newValue;
-    if (item.isFolder && item.children) {
-      for (const childId of item.children) {
-        deleteItemRecursively(childId, newValue);
+  const deleteItemRecursively = useCallback(
+    (itemId: string, currentValue: VaultsDataType): VaultsDataType => {
+      const newValue = { ...currentValue };
+      const item = newValue[itemId];
+      if (!item) return newValue;
+      if (item.isFolder && item.children) {
+        for (const childId of item.children) {
+          deleteItemRecursively(childId, newValue);
+        }
       }
-    }
-    for (const [id, currentItem] of Object.entries(newValue)) {
-      if (currentItem.children) {
-        currentItem.children = currentItem.children.filter((cid) => cid !== itemId);
+      for (const [id, currentItem] of Object.entries(newValue)) {
+        if (currentItem.children) {
+          currentItem.children = currentItem.children.filter(
+            (cid) => cid !== itemId,
+          );
+        }
       }
-    }
-    delete newValue[itemId];
-    return newValue;
-  }, []);
+      delete newValue[itemId];
+      return newValue;
+    },
+    [],
+  );
 
   // 添加子项到指定文件夹
-  const addItemToFolder = useCallback((parentFolderId: string, isFolder: boolean = false) => {
-    const newId = isFolder ? `folder-${Date.now()}` : `item-${Date.now()}`;
-    const newItem: VaultItemOrigin = {
-      index: newId,
-      data: isFolder ? "New Folder" : "New Item",
-      isFolder: isFolder,
-      canMove: true,
-      canRename: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      vaultData: isFolder ? null : {
-        url: "",
-        username: "",
-        password: "",
-        notes: "",
-        type: "website",
-      },
-    };
-    const newValue = { ...value };
-    newValue[newId] = newItem;
-    if (!newValue[parentFolderId].children) {
-      newValue[parentFolderId].children = [];
-    }
-    newValue[parentFolderId].children!.push(newId);
-    onChange(newValue);
-    if (!isFolder && onAddNewItem) {
-      onAddNewItem(newItem);
-    }
-  }, [value, onChange, onAddNewItem]);
+  const addItemToFolder = useCallback(
+    (parentFolderId: string, isFolder: boolean = false) => {
+      const newId = isFolder ? `folder-${Date.now()}` : `item-${Date.now()}`;
+      const newItem: VaultItemOrigin = {
+        index: newId,
+        data: isFolder ? "New Folder" : "New Item",
+        isFolder: isFolder,
+        canMove: true,
+        canRename: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        vaultData: isFolder
+          ? null
+          : {
+              url: "",
+              username: "",
+              password: "",
+              notes: "",
+              type: "website",
+            },
+      };
+      const newValue = { ...value };
+      newValue[newId] = newItem;
+      if (!newValue[parentFolderId].children) {
+        newValue[parentFolderId].children = [];
+      }
+      newValue[parentFolderId].children!.push(newId);
+      onChange(newValue);
+      if (!isFolder && onAddNewItem) {
+        onAddNewItem(newItem);
+      }
+    },
+    [value, onChange, onAddNewItem],
+  );
 
   const tree = useTree<VaultItemOrigin>({
     rootItemId: "root",
@@ -93,7 +108,6 @@ const VaultTrees = (props: {
       getChildren: (itemId) => value[itemId]?.children || [],
     },
     indent: 24,
-    enableRenameOnDoubleClick: true,
     features: [
       syncDataLoaderFeature,
       selectionFeature,
@@ -174,7 +188,11 @@ const VaultTrees = (props: {
     if (!item) return;
     const itemName = item.data;
     const isFolder = item.isFolder;
-    if (confirm(`Are you sure you want to delete "${itemName}"? ${isFolder ? "All contents will be deleted." : ""}`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete "${itemName}"? ${isFolder ? "All contents will be deleted." : ""}`,
+      )
+    ) {
       const newValue = deleteItemRecursively(itemId, { ...value });
       onChange(newValue);
       toast.success(`${isFolder ? "Folder" : "Item"} deleted`);
@@ -186,7 +204,9 @@ const VaultTrees = (props: {
       <div className="bg-default-100/50 px-4 py-3 border-b border-default-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FolderIcon className="w-5 h-5 text-default-500" />
-          <span className="text-sm font-medium text-default-700">Vault Explorer</span>
+          <span className="text-sm font-medium text-default-700">
+            Vault Explorer
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -210,15 +230,23 @@ const VaultTrees = (props: {
         </div>
       </div>
 
-      <div {...tree.getContainerProps()} className="tree max-h-[500px] overflow-auto p-2">
+      <div
+        {...tree.getContainerProps()}
+        className="tree max-h-[500px] overflow-auto p-2"
+      >
         {tree.getItems().map((item) => {
           const focused = item.isFocused();
           const expanded = item.isExpanded();
           const selected = item.isSelected();
+          // const isEdit =
           const isFolder = item.isFolder();
           const itemId = item.getId();
           const isRoot = itemId === "root";
           const isRenaming = item.isRenaming();
+          const isEdit =
+            !isFolder &&
+            selectedVault &&
+            selectedVault.index === item.getItemData().index;
 
           if (isRoot) return null;
 
@@ -228,9 +256,11 @@ const VaultTrees = (props: {
                 {...item.getProps()}
                 style={{ paddingLeft: `${item.getItemMeta().level * 24}px` }}
                 className={clsx(
-                  "w-full flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-colors outline-none cursor-pointer",
-                  selected ? "bg-primary/15 text-primary-foreground" : "hover:bg-default-100/80",
-                  focused && !selected && "ring-1 ring-primary/30 ring-inset"
+                  "w-full flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm outline-none cursor-pointer m-0.5",
+                  selected || isEdit
+                    ? "bg-blue-300 text-primary-foreground"
+                    : "hover:bg-default-100/80",
+                  focused && !selected && "ring-1 ring-primary/30 ring-inset",
                 )}
               >
                 <span className="flex items-center justify-center w-4 h-4 shrink-0">
@@ -310,12 +340,16 @@ const VaultTrees = (props: {
             </div>
           );
         })}
-        <div style={tree.getDragLineStyle()} className="dragline bg-primary h-0.5 rounded-full mx-2" />
+        <div
+          style={tree.getDragLineStyle()}
+          className="dragline bg-primary h-0.5 rounded-full mx-2"
+        />
       </div>
 
       <div className="bg-default-100/30 px-4 py-2 border-t border-default-200">
         <span className="text-xs text-default-500">
-          Click to select • Click folder to expand/collapse • Double-click or F2 to rename
+          Click to select • Click folder to expand/collapse • Double-click or F2
+          to rename
         </span>
       </div>
     </div>
